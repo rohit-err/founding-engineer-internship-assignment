@@ -34,16 +34,20 @@ export default function CompareRibbon({
   });
 
   useEffect(() => {
+    let lastMobile = window.innerWidth < MOBILE_BP;
     const check = () => {
       const mobile = window.innerWidth < MOBILE_BP;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setDesktopPos({
-          x: Math.max(0, (window.innerWidth - 380) / 2),
-          y: window.innerHeight - 56 - BOTTOM_OFFSET,
-        });
-      } else {
-        setMobilePos({ right: 12, bottom: BOTTOM_OFFSET });
+      if (mobile !== lastMobile) {
+        lastMobile = mobile;
+        setIsMobile(mobile);
+        if (!mobile) {
+          setDesktopPos({
+            x: Math.max(0, (window.innerWidth - 380) / 2),
+            y: window.innerHeight - 56 - BOTTOM_OFFSET,
+          });
+        } else {
+          setMobilePos({ right: 12, bottom: BOTTOM_OFFSET });
+        }
       }
     };
     window.addEventListener("resize", check);
