@@ -1,13 +1,25 @@
-import { useRef, useState, useEffect } from 'react';
-import { X, GitCompare, Trash2, GripVertical } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useEffect } from "react";
+import { X, GitCompare, Trash2, GripVertical } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MOBILE_BP = 768;
 const BOTTOM_OFFSET = 56;
 
-export default function CompareRibbon({ selected, colleges, onRemove, onClear, onCompare }) {
+export default function CompareRibbon({
+  selected,
+  colleges,
+  onRemove,
+  onClear,
+  onCompare,
+}) {
   const ribbonRef = useRef(null);
-  const dragState = useRef({ active: false, startX: 0, startY: 0, origX: 0, origY: 0 });
+  const dragState = useRef({
+    active: false,
+    startX: 0,
+    startY: 0,
+    origX: 0,
+    origY: 0,
+  });
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BP);
   const [isDragging, setIsDragging] = useState(false);
@@ -16,7 +28,10 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     x: Math.max(0, (window.innerWidth - 380) / 2),
     y: window.innerHeight - 56 - BOTTOM_OFFSET,
   }));
-  const [mobilePos, setMobilePos] = useState({ right: 12, bottom: BOTTOM_OFFSET });
+  const [mobilePos, setMobilePos] = useState({
+    right: 12,
+    bottom: BOTTOM_OFFSET,
+  });
 
   useEffect(() => {
     const check = () => {
@@ -31,8 +46,8 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
         setMobilePos({ right: 12, bottom: BOTTOM_OFFSET });
       }
     };
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   useEffect(() => {
@@ -48,7 +63,13 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
   // ── Drag logic ───────────────────────────────────────────────────────────────
   const startDrag = (clientX, clientY) => {
     const rect = ribbonRef.current.getBoundingClientRect();
-    dragState.current = { active: true, startX: clientX, startY: clientY, origX: rect.left, origY: rect.top };
+    dragState.current = {
+      active: true,
+      startX: clientX,
+      startY: clientY,
+      origX: rect.left,
+      origY: rect.top,
+    };
     setIsDragging(true);
   };
 
@@ -59,8 +80,18 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     const newY = dragState.current.origY + clientY - dragState.current.startY;
     if (isMobile) {
       setMobilePos({
-        right: window.innerWidth - Math.min(Math.max(newX + el.offsetWidth, el.offsetWidth), window.innerWidth),
-        bottom: window.innerHeight - Math.min(Math.max(newY + el.offsetHeight, el.offsetHeight), window.innerHeight),
+        right:
+          window.innerWidth -
+          Math.min(
+            Math.max(newX + el.offsetWidth, el.offsetWidth),
+            window.innerWidth,
+          ),
+        bottom:
+          window.innerHeight -
+          Math.min(
+            Math.max(newY + el.offsetHeight, el.offsetHeight),
+            window.innerHeight,
+          ),
       });
     } else {
       setDesktopPos({
@@ -70,16 +101,23 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     }
   };
 
-  const endDrag = () => { dragState.current.active = false; setIsDragging(false); };
+  const endDrag = () => {
+    dragState.current.active = false;
+    setIsDragging(false);
+  };
 
   // Mouse drag — attached to the handle element only
   const onHandleMouseDown = (e) => {
     e.preventDefault();
     startDrag(e.clientX, e.clientY);
     const move = (ev) => moveDrag(ev.clientX, ev.clientY);
-    const up = () => { endDrag(); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', up);
+    const up = () => {
+      endDrag();
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
   };
 
   // Touch drag — non-passive so preventDefault() stops page scroll
@@ -92,11 +130,11 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     };
     const end = () => {
       endDrag();
-      window.removeEventListener('touchmove', move);
-      window.removeEventListener('touchend', end);
+      window.removeEventListener("touchmove", move);
+      window.removeEventListener("touchend", end);
     };
-    window.addEventListener('touchmove', move, { passive: false }); // non-passive = can preventDefault
-    window.addEventListener('touchend', end);
+    window.addEventListener("touchmove", move, { passive: false }); // non-passive = can preventDefault
+    window.addEventListener("touchend", end);
   };
 
   const selectedColleges = colleges.filter((c) => selected.includes(c.id));
@@ -110,12 +148,21 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     return (
       <div
         ref={ribbonRef}
-        style={{ right: mobilePos.right, bottom: mobilePos.bottom, position: 'fixed', zIndex: 50 }}
+        style={{
+          right: mobilePos.right,
+          bottom: mobilePos.bottom,
+          position: "fixed",
+          zIndex: 50,
+        }}
         className="select-none"
       >
         <motion.div
-          animate={{ boxShadow: isDragging ? '0 16px 32px rgba(0,0,0,0.14)' : '0 4px 16px rgba(0,0,0,0.08)' }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
+          animate={{
+            boxShadow: isDragging
+              ? "0 16px 32px rgba(0,0,0,0.14)"
+              : "0 4px 16px rgba(0,0,0,0.08)",
+          }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl py-3 px-2.5 flex flex-col items-center gap-2"
         >
           {/* Drag handle */}
@@ -140,7 +187,10 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
                       exit={{ opacity: 0, scale: 0.7 }}
                       transition={{ duration: 0.15 }}
                       className="relative group"
-                      style={{ marginTop: i === 0 ? 0 : -8, zIndex: selectedColleges.length - i }}
+                      style={{
+                        marginTop: i === 0 ? 0 : -8,
+                        zIndex: selectedColleges.length - i,
+                      }}
                     >
                       <img
                         src={college.image}
@@ -158,7 +208,9 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
                     </motion.div>
                   ))}
                 </AnimatePresence>
-                <span className="text-[10px] font-semibold text-slate-400 mt-1.5">{selected.length}/3</span>
+                <span className="text-[10px] font-semibold text-slate-400 mt-1.5">
+                  {selected.length}/3
+                </span>
               </div>
               <div className="w-full h-px bg-slate-100" />
               <button
@@ -175,7 +227,7 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
             onClick={canCompare ? onCompare : undefined}
             disabled={!canCompare}
             className={`p-2 rounded-xl transition-colors duration-150
-              ${canCompare ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+              ${canCompare ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-400 cursor-not-allowed"}`}
             aria-label="Compare"
           >
             <GitCompare size={15} />
@@ -189,12 +241,21 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
   return (
     <div
       ref={ribbonRef}
-      style={{ left: desktopPos.x, top: desktopPos.y, position: 'fixed', zIndex: 50 }}
+      style={{
+        left: desktopPos.x,
+        top: desktopPos.y,
+        position: "fixed",
+        zIndex: 50,
+      }}
       className="select-none"
     >
       <motion.div
-        animate={{ boxShadow: isDragging ? '0 16px 32px rgba(0,0,0,0.12)' : '0 4px 16px rgba(0,0,0,0.08)' }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        animate={{
+          boxShadow: isDragging
+            ? "0 16px 32px rgba(0,0,0,0.12)"
+            : "0 4px 16px rgba(0,0,0,0.08)",
+        }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl px-3 py-3 flex items-center gap-3"
         style={{ minWidth: 360 }}
       >
@@ -223,7 +284,10 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
                       exit={{ opacity: 0, scale: 0.7 }}
                       transition={{ duration: 0.15 }}
                       className="relative group"
-                      style={{ marginLeft: i === 0 ? 0 : -10, zIndex: selectedColleges.length - i }}
+                      style={{
+                        marginLeft: i === 0 ? 0 : -10,
+                        zIndex: selectedColleges.length - i,
+                      }}
                     >
                       <img
                         src={college.image}
@@ -242,7 +306,9 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
                   ))}
                 </AnimatePresence>
               </div>
-              <span className="text-slate-600 text-sm font-medium">{selected.length} selected</span>
+              <span className="text-slate-600 text-sm font-medium">
+                {selected.length} selected
+              </span>
             </>
           )}
         </div>
@@ -264,10 +330,10 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
             onClick={canCompare ? onCompare : undefined}
             disabled={!canCompare}
             className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl transition-colors duration-150
-              ${canCompare ? 'bg-blue-700 hover:bg-blue-800 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+              ${canCompare ? "bg-blue-700 hover:bg-blue-800 text-white" : "bg-slate-100 text-slate-400 cursor-not-allowed"}`}
           >
             <GitCompare size={13} />
-            Compare{selected.length >= 2 ? ` (${selected.length})` : ''}
+            Compare{selected.length >= 2 ? ` (${selected.length})` : ""}
           </button>
         </div>
       </motion.div>
