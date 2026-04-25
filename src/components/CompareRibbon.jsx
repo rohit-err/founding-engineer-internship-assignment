@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { X, GitCompare, Trash2 } from 'lucide-react';
+import { X, GitCompare, Trash2, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MOBILE_BP = 768;
@@ -12,16 +12,12 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BP);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Desktop: top/left absolute position
   const [desktopPos, setDesktopPos] = useState(() => ({
     x: Math.max(0, (window.innerWidth - 380) / 2),
     y: window.innerHeight - 56 - BOTTOM_OFFSET,
   }));
-
-  // Mobile: right/bottom absolute position
   const [mobilePos, setMobilePos] = useState({ right: 12, bottom: BOTTOM_OFFSET });
 
-  // Detect breakpoint
   useEffect(() => {
     const check = () => {
       const mobile = window.innerWidth < MOBILE_BP;
@@ -39,7 +35,6 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Refine desktop position once element is measured
   useEffect(() => {
     if (isMobile) return;
     const el = ribbonRef.current;
@@ -50,7 +45,7 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     });
   }, [isMobile]);
 
-  // ── Shared drag logic ────────────────────────────────────────────────────────
+  // ── Drag logic ───────────────────────────────────────────────────────────────
   const startDrag = (clientX, clientY) => {
     const rect = ribbonRef.current.getBoundingClientRect();
     dragState.current = { active: true, startX: clientX, startY: clientY, origX: rect.left, origY: rect.top };
@@ -60,31 +55,25 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
   const moveDrag = (clientX, clientY) => {
     if (!dragState.current.active) return;
     const el = ribbonRef.current;
-    const dx = clientX - dragState.current.startX;
-    const dy = clientY - dragState.current.startY;
-    const newX = dragState.current.origX + dx;
-    const newY = dragState.current.origY + dy;
-    const maxX = window.innerWidth - el.offsetWidth;
-    const maxY = window.innerHeight - el.offsetHeight;
-
+    const newX = dragState.current.origX + clientX - dragState.current.startX;
+    const newY = dragState.current.origY + clientY - dragState.current.startY;
     if (isMobile) {
-      // Convert left/top to right/bottom, clamped fully within viewport
       setMobilePos({
         right: window.innerWidth - Math.min(Math.max(newX + el.offsetWidth, el.offsetWidth), window.innerWidth),
         bottom: window.innerHeight - Math.min(Math.max(newY + el.offsetHeight, el.offsetHeight), window.innerHeight),
       });
     } else {
       setDesktopPos({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY)),
+        x: Math.max(0, Math.min(newX, window.innerWidth - el.offsetWidth)),
+        y: Math.max(0, Math.min(newY, window.innerHeight - el.offsetHeight)),
       });
     }
   };
 
   const endDrag = () => { dragState.current.active = false; setIsDragging(false); };
 
-  const onMouseDown = (e) => {
-    if (e.target.closest('button')) return;
+  // Mouse drag — attached to the handle element only
+  const onHandleMouseDown = (e) => {
     e.preventDefault();
     startDrag(e.clientX, e.clientY);
     const move = (ev) => moveDrag(ev.clientX, ev.clientY);
@@ -93,13 +82,20 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
     window.addEventListener('mouseup', up);
   };
 
-  const onTouchStart = (e) => {
-    if (e.target.closest('button')) return;
+  // Touch drag — non-passive so preventDefault() stops page scroll
+  const onHandleTouchStart = (e) => {
     const t = e.touches[0];
     startDrag(t.clientX, t.clientY);
-    const move = (ev) => moveDrag(ev.touches[0].clientX, ev.touches[0].clientY);
-    const end = () => { endDrag(); window.removeEventListener('touchmove', move, { passive: true }); window.removeEventListener('touchend', end); };
-    window.addEventListener('touchmove', move, { passive: true });
+    const move = (ev) => {
+      ev.preventDefault(); // prevents page scroll while dragging
+      moveDrag(ev.touches[0].clientX, ev.touches[0].clientY);
+    };
+    const end = () => {
+      endDrag();
+      window.removeEventListener('touchmove', move);
+      window.removeEventListener('touchend', end);
+    };
+    window.addEventListener('touchmove', move, { passive: false }); // non-passive = can preventDefault
     window.addEventListener('touchend', end);
   };
 
@@ -107,7 +103,7 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
   const isEmpty = selected.length === 0;
   const canCompare = selected.length >= 2;
 
-  const pillClass = `bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl cursor-grab active:cursor-grabbing`;
+  const handleClass = `text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing transition-colors p-1 touch-none`;
 
   // ── Mobile: compact vertical pill ───────────────────────────────────────────
   if (isMobile) {
@@ -118,12 +114,20 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
         className="select-none"
       >
         <motion.div
-          onMouseDown={onMouseDown}
-          onTouchStart={onTouchStart}
           animate={{ boxShadow: isDragging ? '0 16px 32px rgba(0,0,0,0.14)' : '0 4px 16px rgba(0,0,0,0.08)' }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className={`${pillClass} py-3 px-2.5 flex flex-col items-center gap-2`}
+          className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl py-3 px-2.5 flex flex-col items-center gap-2"
         >
+          {/* Drag handle */}
+          <div
+            onMouseDown={onHandleMouseDown}
+            onTouchStart={onHandleTouchStart}
+            className={handleClass}
+            aria-label="Drag to move"
+          >
+            <GripVertical size={14} />
+          </div>
+
           {!isEmpty && (
             <>
               <div className="flex flex-col items-center">
@@ -166,6 +170,7 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
               </button>
             </>
           )}
+
           <button
             onClick={canCompare ? onCompare : undefined}
             disabled={!canCompare}
@@ -188,12 +193,21 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
       className="select-none"
     >
       <motion.div
-        onMouseDown={onMouseDown}
         animate={{ boxShadow: isDragging ? '0 16px 32px rgba(0,0,0,0.12)' : '0 4px 16px rgba(0,0,0,0.08)' }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`${pillClass} px-4 py-3 flex items-center gap-4`}
+        className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl px-3 py-3 flex items-center gap-3"
         style={{ minWidth: 360 }}
       >
+        {/* Drag handle */}
+        <div
+          onMouseDown={onHandleMouseDown}
+          className={handleClass}
+          aria-label="Drag to move"
+        >
+          <GripVertical size={15} />
+        </div>
+
+        {/* Left: avatars or empty hint */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {isEmpty ? (
             <p className="text-slate-400 text-sm">Select colleges to compare</p>
@@ -233,6 +247,7 @@ export default function CompareRibbon({ selected, colleges, onRemove, onClear, o
           )}
         </div>
 
+        {/* Right: actions */}
         <div className="flex items-center gap-2 shrink-0">
           {!isEmpty && (
             <>
