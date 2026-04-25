@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, MapPin, DollarSign, Star, Users, TrendingDown } from 'lucide-react';
+import { X, MapPin, DollarSign, Star, Users, TrendingDown, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function StarRating({ rating }) {
@@ -43,8 +43,8 @@ function AcceptanceBar({ value }) {
 
 const ROWS = [
   { key: 'location',            label: 'Location',              icon: MapPin,       render: (c) => c.location },
-  { key: 'fees',                label: 'Annual Fees',           icon: DollarSign,   render: (c) => <span className="font-semibold text-slate-900">${c.fees.toLocaleString()}</span>, best: (cs) => cs.reduce((a, b) => a.fees < b.fees ? a : b).id },
-  { key: 'rating',              label: 'Rating',                icon: Star,         render: (c) => <StarRating rating={c.rating} />, best: (cs) => cs.reduce((a, b) => a.rating > b.rating ? a : b).id },
+  { key: 'fees',                label: 'Annual Fees',           icon: DollarSign,   render: (c) => <span className="font-semibold text-slate-900">${c.fees.toLocaleString()}</span> },
+  { key: 'rating',              label: 'Rating',                icon: Star,         render: (c) => <StarRating rating={c.rating} /> },
   { key: 'acceptanceRate',      label: 'Acceptance Rate',       icon: TrendingDown, render: (c) => <AcceptanceBar value={c.acceptanceRate} /> },
   { key: 'studentFacultyRatio', label: 'Student-Faculty Ratio', icon: Users,        render: (c) => c.studentFacultyRatio },
 ];
@@ -135,7 +135,6 @@ export default function CompareModal({ colleges, onClose }) {
               <tbody>
                 {ROWS.map((row, idx) => {
                   const Icon = row.icon;
-                  const bestId = row.best ? row.best(colleges) : null;
                   return (
                     <tr
                       key={row.key}
@@ -148,35 +147,31 @@ export default function CompareModal({ colleges, onClose }) {
                         </div>
                       </td>
                       {colleges.map((college) => (
-                        <td key={college.id} className="py-4 px-4 md:px-6 text-sm text-slate-700 relative">
-                          {bestId === college.id && (
-                            <span className="absolute top-2 right-3 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
-                              Best
-                            </span>
-                          )}
+                        <td key={college.id} className="py-4 px-4 md:px-6 text-sm text-slate-700">
                           {row.render(college)}
                         </td>
                       ))}
                     </tr>
                   );
                 })}
+                {/* About row */}
+                <tr className="border-t border-slate-100">
+                  <td className="py-4 px-5 md:px-8 align-top">
+                    <div className="flex items-center gap-1.5">
+                      <Info size={12} className="text-slate-400 shrink-0" />
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">About</span>
+                    </div>
+                  </td>
+                  {colleges.map((college) => (
+                    <td key={college.id} className="py-4 px-4 md:px-6 align-top">
+                      <div className="bg-slate-50 rounded-xl p-3 md:p-4">
+                        <p className="text-xs md:text-sm text-slate-600 leading-relaxed">{college.description}</p>
+                      </div>
+                    </td>
+                  ))}
+                </tr>
               </tbody>
             </table>
-
-            {/* About */}
-            <div className="px-5 md:px-8 py-6 border-t border-slate-100">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">About</p>
-              <div
-                className="grid gap-4"
-                style={{ gridTemplateColumns: `repeat(${colleges.length}, 1fr)` }}
-              >
-                {colleges.map((college) => (
-                  <div key={college.id} className="bg-slate-50 rounded-xl p-3 md:p-4">
-                    <p className="text-xs md:text-sm text-slate-600 leading-relaxed">{college.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </motion.div>
       )}
